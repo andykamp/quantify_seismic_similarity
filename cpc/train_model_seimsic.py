@@ -153,8 +153,8 @@ def train_model(epochs, batch_size, output_dir, code_size, lr=1e-4, terms=3, pre
 
     # Callbacks
     callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=1/3, patience=2, min_lr=1e-4), keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=3,  mode='auto'), keras.callbacks.ModelCheckpoint(join(output_dir, 'checkpoint.h5'), monitor='val_loss', verbose=1, save_best_only=True, mode='auto')]
-    steps_per_epoch = len(train_data)
-    validation_steps = len(validation_data)
+    steps_per_epoch = 1#len(train_data)
+    validation_steps = 1#len(validation_data)
     print("steps_per_epoch", steps_per_epoch)
     print("validation_steps", validation_steps)
 
