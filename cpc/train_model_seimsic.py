@@ -132,7 +132,7 @@ def network_cpc(image_shape, terms, predict_terms, code_size, learning_rate):
     return cpc_model
 
 
-def train_model(epochs, batch_size, output_dir, code_size, lr=1e-4, terms=3, predict_terms=4, image_size=256,patch_size=64, stride=32, num_crops=10, augmentation=True, sequence=True, verbose=False):
+def train_model(epochs, batch_size, output_dir, code_size, lr=1e-4, terms=3, predict_terms=4, image_size=256,patch_size=64, stride=32, num_crops=10, augmentation=True, sequence=True, verbose=False, steps_per_epoch=None, validation_steps=None):
 
     # create output folder if it does not exist
     if not os.path.exists(output_dir):
@@ -153,8 +153,10 @@ def train_model(epochs, batch_size, output_dir, code_size, lr=1e-4, terms=3, pre
 
     # Callbacks
     callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=1/3, patience=2, min_lr=1e-4), keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=3,  mode='auto'), keras.callbacks.ModelCheckpoint(join(output_dir, 'checkpoint.h5'), monitor='val_loss', verbose=1, save_best_only=True, mode='auto')]
-    steps_per_epoch = 1#len(train_data)
-    validation_steps = 1#len(validation_data)
+
+    # override  default steps if spesifies     
+    if steps_per_epoch is None: steps_per_epoch = len(train_data)
+    if validation_steps is None: validation_steps = len(validation_data)
     print("steps_per_epoch", steps_per_epoch)
     print("validation_steps", validation_steps)
 
