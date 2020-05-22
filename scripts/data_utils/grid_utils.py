@@ -150,8 +150,8 @@ def create_patched_data(padded_data, patch_size, directions):
     for dir in directions:
         # for inline 
         shape = padded_data[dir].shape
-        n = int(shape[1]/64) 
-        m = int(shape[2]/64)
+        n = int(shape[1]/patch_size) 
+        m = int(shape[2]/patch_size)
         tot_patches = shape[0]*n*m
         patched_num_smaples[dir] = tot_patches
         patched_grid_sizes[dir] = [tot_patches, n, m]
