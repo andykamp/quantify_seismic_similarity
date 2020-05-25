@@ -35,7 +35,7 @@ class RiemannianMetric(object):
         # the metric tensor
         output_dim = self.x.shape[1].value
         # derivative of each output dim wrt to input (tf.gradients would sum over the output)
-        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(28)] # TODO HARDCOD RMEOOOOOOOOOVE
+        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(64)] # TODO HARDCOD RMEOOOOOOOOOVE
         J = tf.stack(J, axis=1)  # batch x output x latent
         self.J = J
 
@@ -69,7 +69,10 @@ class RiemannianMetric(object):
 
             # eval the integral at discrete point
             L_discrete = np.sqrt((z1-z2) @ G_eval @ (z1-z2).T)
+
+            print("m", L_discrete)
             L_discrete = L_discrete.flatten()
+
 
             L = np.sum(dt * L_discrete)
 
@@ -186,8 +189,8 @@ def main():
     plt.figure()
     plt.scatter(inp[:,0], inp[:,1], c=mf)
 
-    #z1 = np.array([[1, 10]])
-    #z2 = np.array([[10, 2]])
+    z1 = np.array([[1, 10]])
+    z2 = np.array([[10, 2]])
     # for steps in [100,1_000,10_000,100_000]:
     #     q = r.riemannian_distance_along_line(z1, z2, n_steps=steps)
     #     print(q)
