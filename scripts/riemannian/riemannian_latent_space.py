@@ -4,10 +4,10 @@ import tqdm
 import networkx as nx
 from sklearn.neighbors import NearestNeighbors
 import matplotlib
-matplotlib.use('PS')
-matplotlib.use(
-    "TkAgg"
-)  # suggested to avoid AttributeError: 'FigureCanvasMac' object has no attribute 'renderer'
+#matplotlib.use('PS')
+#matplotlib.use(
+#    "TkAgg"
+#)  # suggested to avoid AttributeError: 'FigureCanvasMac' object has no attribute 'renderer'
 import matplotlib.pyplot as plt
 """
 see https://github.com/hrzn/jacobianmatrix/blob/master/Jacobian-matrix-examples.ipynb
@@ -24,7 +24,7 @@ class RiemannianMetric(object):
         self.session = session
         print("nklnlnnkl", x, z)
         
-    def create_tf_graph(self):
+    def create_tf_graph(self, output_dim):
         """
         creates the metric tensor (J^T J and J being the jacobian of the decoder), 
         which can be evaluated at any point in Z
@@ -33,9 +33,10 @@ class RiemannianMetric(object):
         """
         print("dsfsdsdfds", self.x[:, 0], self.z)
         # the metric tensor
-        output_dim = self.x.shape[1].value
+        if not output_dim:
+            output_dim = self.x.shape[1].value
         # derivative of each output dim wrt to input (tf.gradients would sum over the output)
-        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(64)] # TODO HARDCOD RMEOOOOOOOOOVE
+        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(output_dim)] # TODO HARDCOD RMEOOOOOOOOOVE
         J = tf.stack(J, axis=1)  # batch x output x latent
         self.J = J
 

@@ -5,10 +5,10 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.optimizers import RMSprop
 import matplotlib
-matplotlib.use('PS')
-matplotlib.use(
-    "TkAgg"
-)  # suggested to avoid AttributeError: 'FigureCanvasMac' object has no attribute 'renderer'
+#matplotlib.use('PS')
+#matplotlib.use(
+#    "TkAgg"
+#)  # suggested to avoid AttributeError: 'FigureCanvasMac' object has no attribute 'renderer'
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
@@ -35,8 +35,8 @@ class InitCentersKMeans(Initializer):
         km = KMeans(n_clusters=n_centers, max_iter=self.max_iter, verbose=0)
         km.fit(self.X)
         #PLOTTING THE KMEANS INIT CLUSTERS
-        #print(km.cluster_centers_.shape)
-        #plt.scatter(km.cluster_centers_[:,0], km.cluster_centers_[:,1])
+        print("num clusters",km.cluster_centers_.shape)
+        plt.scatter(km.cluster_centers_[:,0], km.cluster_centers_[:,1])
         #plt.show()
         return km.cluster_centers_
 
