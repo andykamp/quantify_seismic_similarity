@@ -24,7 +24,7 @@ class InitCentersKMeans(Initializer):
         X: matrix, dataset
     """
 
-    def __init__(self, X, max_iter=100):
+    def __init__(self, X, max_iter=500):
         self.X = X
         self.max_iter = max_iter
 
@@ -57,6 +57,8 @@ class InitCentersRandom(Initializer):
         print("shapes", shape[1], self.X.shape[1])
         assert shape[1] == self.X.shape[1]
         idx = np.random.randint(self.X.shape[0], size=shape[0])
+        plt.scatter( self.X[idx,0],  self.X[idx,1])
+        print("inside initiationrandom", self.X[idx].shape)
         return self.X[idx, :]
 
 
