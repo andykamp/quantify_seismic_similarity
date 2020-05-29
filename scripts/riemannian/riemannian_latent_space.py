@@ -23,7 +23,6 @@ class RiemannianMetric(object):
         self.z = z
         self.session = session
         print("nklnlnnkl", x, z)
-        
     def create_tf_graph(self, output_dim):
         """
         creates the metric tensor (J^T J and J being the jacobian of the decoder), 
@@ -67,11 +66,12 @@ class RiemannianMetric(object):
         if True:
             # for weird reasons it seems to be alot faster to first eval G then do matrix mutliple outside of TF
             G_eval = self.session.run(self.G, feed_dict={self.z: the_line})
-
+            #G_eval = np.nan_to_num(1/G_eval)
+            #print(np.count_nonzero(G_eval))
             # eval the integral at discrete point
             L_discrete = np.sqrt((z1-z2) @ G_eval @ (z1-z2).T)
-
-            print("m", L_discrete)
+            #print(L_discrete.shape[0], np.count_nonzero(L_discrete))
+            #print("m", L_discrete)
             L_discrete = L_discrete.flatten()
 
 
@@ -133,7 +133,7 @@ class RiemannianTree(object):
                 L_euclidean = dist
 
                 # note nn-distances are NOT symmetric
-                edge_attr = {'distance_riemann': float(1/L_riemann),
+                edge_attr = {'weight_riemann': float(1/L_riemann),
                              'weight_euclidean': float(1/L_euclidean),
                              'distance_riemann': float(L_riemann),
                              'distance_euclidean': float(L_euclidean)}
@@ -167,7 +167,6 @@ def main():
 
     print("inputoutput", m.output, m.input, m.output.shape[1].value)
     print("nkln", m.output[:, 0], m.input)
-    
 
 
     # plot the model real quick
@@ -196,9 +195,7 @@ def main():
     #     q = r.riemannian_distance_along_line(z1, z2, n_steps=steps)
     #     print(q)
     plt.show()
-    
     # try this on the swizz_roll dataset
-    
     n_samples = 1000
     noise = 0.5
     import sklearn.datasets
