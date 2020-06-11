@@ -71,11 +71,11 @@ def plot_subset_of_directions(data, directions, max):
     for dir in directions:
         j = 1
         np.random.seed(1)
-        fig = plt.figure(figsize=(3,3)) 
-        fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05) 
-        for i in np.random.choice(100, 25):
+        fig = plt.figure(figsize=(10,10)) 
+        fig.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)  
+        for i in np.random.choice(400, 9):
             # plot a 8*8 imges 25 times
-            plt.subplot(5,5,j), plt.imshow(data[dir][i].T, cmap='binary'), plt.axis('off')
+            plt.subplot(3,3,j), plt.imshow(data[dir][i].T), plt.axis('off')
             j += 1
         plt.show()
 

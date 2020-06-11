@@ -187,7 +187,6 @@ def plot_patched_directions(padded_data, patched_data, patched_grid_sizes, patch
         random_slice  = random_slice*nm
         print("random_slice", random_slice) 
         patched_slice = patched_data[dir][random_slice:random_slice+nm]
-
         print("patched_slice", patched_slice.shape)
         counter = 1
         for i in range(nm):
