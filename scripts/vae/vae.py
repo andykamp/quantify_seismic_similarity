@@ -172,8 +172,8 @@ if __name__ == "__main__":
     # plot riemann for each single gridpoint 
     # plot mf for entire grid 
     h = .09  # step size in the mesh
-    x_min, x_max = x_test[:, 0].min() - 1, x_test[:, 0].max() + 1
-    y_min, y_max = x_test[:, 1].min() - 1,x_test[:, 1].max() + 1
+    x_min, x_max = x_test_encoded[:, 0].min() - 1, x_test_encoded[:, 0].max() + 1
+    y_min, y_max = x_test_encoded[:, 1].min() - 1,x_test_encoded[:, 1].max() + 1
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
                         np.arange(y_min, y_max, h))
 
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     plt.pcolormesh(xx, yy, Z, cmap="OrRd")
 
     #plot actuals
-    plt.scatter(x_test[:,0], x_test[:,1],  )
+    #plt.scatter(x_test[:,0], x_test[:,1],  )
     plt.scatter(x_test_encoded[:,0], x_test_encoded[:,1],  )
     plt.title("Full mf showing how inp space will change ")
     plt.colorbar()

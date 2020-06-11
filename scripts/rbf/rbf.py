@@ -1,7 +1,8 @@
 from sklearn.cluster import KMeans
 
 import numpy as np
-from keras.models import Sequential
+import keras
+from keras.models import Sequential, Model
 from keras.layers.core import Dense
 from keras.optimizers import RMSprop
 import matplotlib
@@ -151,16 +152,18 @@ if __name__ == "__main__":
     X, y = load_data()
     #plt.scatter(X[:,0], X[:,1])
     #plt.show()
+    inputlayer = keras.Input((2,)) # input
 
-    model = Sequential()
-    rbflayer = RBFLayer(34,
+    rbflayer = RBFLayer(64,
                         initializer=InitCentersKMeans(X),#InitCentersRandom(X),
-                        betas=50.0, # determine the sharpness of the gausian https://towardsdatascience.com/most-effective-way-to-implement-radial-basis-function-neural-network-for-classification-problem-33c467803319
+                        betas=5.0, # determine the sharpness of the gausian https://towardsdatascience.com/most-effective-way-to-implement-radial-basis-function-neural-network-for-classification-problem-33c467803319
                         input_shape=(2,))
-    model.add(rbflayer)
-    model.add(Dense(1, activation='sigmoid', name='foo'))
-    #model.add(Dense(1, name='foo'))
 
+    dense = Dense(1, activation='sigmoid', name='foo')
+    rbf_only = rbflayer(inputlayer)
+    rbf = dense(rbflayer(inputlayer))
+    #model.add(Dense(1, name='foo'))
+    model = Model(inputlayer, rbf)
     model.compile(loss=binary_crossentropy,
                   optimizer=RMSprop()) #'mean_squared_error',
 
@@ -169,6 +172,11 @@ if __name__ == "__main__":
               batch_size=50,
               epochs=10,
               verbose=1)
+
+    extractor = Model(inputlayer, rbf_only)
+    feature = extractor.predict(X)
+
+    print("features", feature.shape, feature[0], np.count_nonzero(feature[0]))
 
     y_pred = model.predict(X)
     print(y_pred[:10], y_pred.shape)
@@ -181,8 +189,10 @@ if __name__ == "__main__":
     widths = rbflayer.get_weights()[1]
     print(centers.shape,widths.shape)
     print(centers[:,1].shape, centers[:,1].shape, np.zeros(len(centers)).shape)
+
     #plt.scatter(centers, np.zeros(len(centers)), s=20*widths)
-    print(widths[:10]*200)
+    print(widths)
+    
     print(centers[:10])
 
     plt.scatter(X[:,0], X[:,1], c=y_pred)

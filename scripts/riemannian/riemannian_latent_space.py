@@ -35,7 +35,7 @@ class RiemannianMetric(object):
         # the metric tensor
         output_dim = self.x.shape[1].value
         # derivative of each output dim wrt to input (tf.gradients would sum over the output)
-        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(64)] # TODO HARDCOD RMEOOOOOOOOOVE
+        J = [tf.gradients(self.x[:, _], self.z)[0] for _ in range(output_dim)] # TODO HARDCOD RMEOOOOOOOOOVE
         J = tf.stack(J, axis=1)  # batch x output x latent
         self.J = J
 
@@ -70,7 +70,7 @@ class RiemannianMetric(object):
             # eval the integral at discrete point
             L_discrete = np.sqrt((z1-z2) @ G_eval @ (z1-z2).T)
 
-            print("m", L_discrete)
+            #print("m", L_discrete)
             L_discrete = L_discrete.flatten()
 
 
@@ -102,12 +102,15 @@ class RiemannianTree(object):
 
 
     def create_riemannian_graph(self, z, n_steps, n_neighbors):
-
+        # we first create the knn graph based on eucledian??? distance
         n_data = len(z)
-        knn = NearestNeighbors(n_neighbors=n_neighbors, metric='euclidean')
+        knn = NearestNeighbors(n_neighbors=n_neighbors, metric='euclidean') # TODO IS ECULEDIAN CORRECT?
         knn.fit(z)
 
         G = nx.Graph()
+
+        # then for each node we find its edges and compute the true geodesic distance
+        # when we have this we can use its weights to perform a*start
 
         # Nodes
         for i in range(n_data):
@@ -132,7 +135,7 @@ class RiemannianTree(object):
                 L_euclidean = dist
 
                 # note nn-distances are NOT symmetric
-                edge_attr = {'distance_riemann': float(1/L_riemann),
+                edge_attr = {'weight': float(1/L_riemann),
                              'weight_euclidean': float(1/L_euclidean),
                              'distance_riemann': float(L_riemann),
                              'distance_euclidean': float(L_euclidean)}
@@ -173,10 +176,10 @@ def main():
     inp = np.random.uniform(-50,50, size=(1000, latent_dim))
     outp = m.predict(inp)
 
-    plt.figure()
-    plt.scatter(inp[:,0], inp[:,1])
-    plt.figure()
-    plt.scatter(outp[:,0], outp[:,1])
+    #plt.figure()
+    #plt.scatter(inp[:,0], inp[:,1])
+    #plt.figure()
+    #plt.scatter(outp[:,0], outp[:,1])
 
 
     session = tf.Session()
@@ -186,19 +189,19 @@ def main():
     rmetric.create_tf_graph()
 
     mf = session.run(rmetric.MF, {rmetric.z: inp})
-    plt.figure()
-    plt.scatter(inp[:,0], inp[:,1], c=mf)
+    #plt.figure()
+    #plt.scatter(inp[:,0], inp[:,1], c=mf)
 
-    z1 = np.array([[1, 10]])
-    z2 = np.array([[10, 2]])
-    # for steps in [100,1_000,10_000,100_000]:
-    #     q = r.riemannian_distance_along_line(z1, z2, n_steps=steps)
-    #     print(q)
-    plt.show()
+    #z1 = np.array([[1, 10]])
+    #z2 = np.array([[10, 2]])
+    ## for steps in [100,1_000,10_000,100_000]:
+    ##     q = r.riemannian_distance_along_line(z1, z2, n_steps=steps)
+    ##     print(q)
+    #plt.show()
     
     # try this on the swizz_roll dataset
     
-    n_samples = 1000
+    n_samples = 10000
     noise = 0.5
     import sklearn.datasets
     #z, _  = sklearn.datasets.make_swiss_roll(n_samples=n_samples, noise=noise, random_state=None)
@@ -271,10 +274,17 @@ def main():
     #plt.scatter(outp[:,0], outp[:,1])
     #plt.show()
 
+
+    # we randomly selects 100 points of the data to create the graph
+    graph_indexes = np.random.choice(n_samples, 1000)
+    print("graph_indexes", graph_indexes.shape)
+    z_graph = z[graph_indexes]
+    z_graph_encoded = outp[graph_indexes]
+    print("z.shape", z.shape)
     # we initi the riemanntree 
     rTree = RiemannianTree(rmetric)
     # we then calculate the eucledian and riemann/geodesic length for each edge 
-    G = rTree.create_riemannian_graph(z, n_steps=1000, n_neighbors=10)
+    G = rTree.create_riemannian_graph(z_graph, n_steps=100, n_neighbors=100)
 
     # can use G to do shortest path finding now
 
@@ -286,19 +296,42 @@ def main():
     #print("edges", G.edges())
     
     # plotting each graph
-    q = rmetric.riemannian_distance_along_line(np.array([[-10, 0]]), np.array([[5, 0]]), n_steps=100)
-    print(q)
+    #q = rmetric.riemannian_distance_along_line(np.array([[-10, 0]]), np.array([[5, 0]]), n_steps=100)
+    #print(q)
+    
+    z1 = z_graph[0]
+    z2 = z_graph[50]
+    z1_encoded = z_graph_encoded[0]
+    z2_encoded = z_graph_encoded[50]
+    print("z1z2", z1, z2, z1_encoded, z2_encoded)
 
-    shortest_path_eucl = nx.algorithms.shortest_paths.generic.shortest_path(G, 0, 50, "weight_euclidean")
-    shortest_path_rie = nx.algorithms.shortest_paths.generic.shortest_path(G, 0, 50, "weight")
 
-    def plotPath(data, pathList, G):
+    #shortest_path_eucl = nx.algorithms.shortest_paths.generic.shortest_path(G, 0, 50, "weight_euclidean")
+    #shortest_path_rie = nx.algorithms.shortest_paths.generic.shortest_path(G, 0, 50, "weight")
+
+    shortest_path_eucl = nx.algorithms.shortest_paths.astar_path(G, 0, 50, weight="weight_euclidean")
+    shortest_path_rie = nx.algorithms.shortest_paths.astar_path(G, 0, 50, weight="weight")
+
+    def plotPath(data_graph, data_graph_encoded,  data, pathList, G):
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
+        # plot all nodes
+        im1 = ax1.pcolormesh(xx, yy, Z, cmap="brg")
+        ax1.scatter(data[:,0], data[:,1], color="grey")
+        ax1.scatter(data_graph[:,0], data_graph[:,1], color="blue")
+        ax1.scatter(data_graph_encoded[:,0], data_graph_encoded[:,1], color="pink")
+        ax1.scatter(z1[0], z1[1], color="red")
+        ax1.scatter(z2[0], z2[1], color="green")
+        ax1.scatter(z1_encoded[0], z1_encoded[1], color="red")
+        ax1.scatter(z2_encoded[0], z2_encoded[1], color="green")
+
         n = len(pathList)
         colors = plt.cm.jet(np.linspace(0,1,n))
         i = 0 
         for path in pathList:
+            # plot line trough shortest path
+            if i == 0: label = "ecl"
+            else:label= "rie"
             print("path", path)
             shortest_weight_eucl = 0
             shortest_weight_rie = 0
@@ -310,25 +343,30 @@ def main():
                 #print(fr, to, edge)
                 shortest_weight_eucl += edge["distance_euclidean"]
                 shortest_weight_rie += edge["distance_riemann"]
-            print(path, shortest_weight_eucl, shortest_weight_rie)
+            print(label, ":", path, shortest_weight_eucl, shortest_weight_rie)
             
            
-            # plot line trough shortest path
-            ax1.plot(data[path,0], data[path,1], color=colors[i], label='Line ' + str(i)  )
+           
+
+            ax1.plot(data_graph[path,0], data_graph[path,1], color=colors[i], label=label  )
+            ax1.plot(data_graph_encoded[path,0], data_graph_encoded[path,1], color=colors[i], label=label  )
             handles, labels = ax1.get_legend_handles_labels()
             ax1.legend(handles, labels)
+            #plt.colorbar()
+
             
             i+=1
-        # plot all nodes
-        ax1.scatter(data[:,0], data[:,1])
-        plt.show()
+            fig.colorbar(im1)
+
+        
+        
     
+
     pathList = [shortest_path_eucl, shortest_path_rie]
-    plotPath(z, pathList, G)
+    
+    plotPath(z_graph, z_graph_encoded, z, pathList, G)
 
-
-
-    nx.draw(G)
+    #nx.draw(G)
     plt.show()
    
 if __name__ == '__main__':
